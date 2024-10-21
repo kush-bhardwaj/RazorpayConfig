@@ -1,12 +1,22 @@
 require('dotenv').config();
 const crypto = require('crypto')
-const RazorPayInstance = require("../config/RazorpayConfig");
+// const RazorPayInstance = require("../config/RazorpayConfig");
+const RazorPayInstance = require('../config/RazorpayConfig')
+// console.log("hello",RazorPayInstance())
 exports.createOrder = (req, res, next) => {
     // DO NOT ACCEPT AMOUNT FORM CLIENT\
     const { productId, price } = req.body;
 
-    // course id se fetch krenge product ka data including its price;
+    // Validate price and productId
+    if (!productId || !price || isNaN(price) || price <= 0) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid product ID or price."
+        });
+    }
 
+    // course id se fetch krenge product ka data including its price;
+    // console.log(price , productId)
 
     //create an order 
     const option = {
@@ -14,27 +24,24 @@ exports.createOrder = (req, res, next) => {
         currency: "INR",
         receipt: " receipt_order_1"
     }
-    try {
-        RazorPayInstance.orders.create(option, (err, order) => {
+    // console.log(option)
+    RazorPayInstance().orders.create(option, (err, order) => {
+        console.log("hello")
             if (err) {
+                console.log("razorPay error", err)
                 return res.status(500).json({
                     success: false,
                     message: "something went wrong"
                 })
             } return res.status(200).json(order)
         })
-    } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "something went wrong"
-        })
-    }
 }
 
 
 
 exports.verifyPayment = (req, res, next) => {
     const { order_id, payment_id, signature } = req.body;
+    console.log("order id" ,order_id)
 
     const secretKey = process.env.RAZORPAY_SECRET_KEY;
 
